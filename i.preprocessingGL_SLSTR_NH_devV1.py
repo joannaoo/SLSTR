@@ -322,7 +322,8 @@ if __name__=="__main__":
             obt_list.append(obt)
 
     os.chdir(odir)
-
+    ####another test
+    variable = None
     # orbitewise processing
     for orbit in sorted(obt_list):
         print "\nProcessing for orbit: %s" % (orbit)
