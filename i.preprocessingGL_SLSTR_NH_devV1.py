@@ -408,7 +408,7 @@ if __name__=="__main__":
                             
                         else:
                             print("Files already processed: \n \f %s\n \f %s " % (an_output_name,in_output_name)) 
-                        ##just playing with git
+                        ##just adding something to the new branch
                 except:
                     ##pass
                     SENDMAIL = "/usr/sbin/sendmail" # sendmail location
