@@ -415,7 +415,23 @@ if __name__=="__main__":
 		p.write("Files for upload:\n%s\n%s " % (GLtiffnc,GLtiffql))
 		sts = p.close()
 		sys.exit("ERROR uploading files to FMI GLOBSNOW FTP: %s!" % (dat))
+		
+        liedir = '%s/%s_LIE_toa_br' % (outpth, dat)
+        tardir = '%s/%s' % (outpth, dat)
+        if not os.path.exists(tardir):
+            os.mkdir(tardir)
+        if not os.path.exists(liedir):
+            os.mkdir(liedir)
+        tif_files = glob.glob('%s/SLSTR*tif' % outpth)
+        for tif_file in tif_files:
+            shutil.move(tif_file, liedir)
 
+        if not os.path.exists('%s.tar.gz' % liedir):
+            os.system('tar -zcf %s.tar.gz %s' % (liedir, liedir))
+        if not os.path.exists('%s/%s_LIE_toa_br.tar.gz' % (tardir, dstr2)):
+            shutil.move('%s.tar.gz' % liedir, tardir)
+            cmd = 'upload2s3 %s' % tardir
+            #cmdexec(cmd)
 
 	# this section is only for uploading to GlobLand server!
 	#try:
