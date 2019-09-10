@@ -266,8 +266,11 @@ if __name__=="__main__":
     GLpoly=createPOLYoutput(extent)
     
     #logfile
+
     logdir = "/data/enveo/GL_SE/log"
     #logdir = "/mnt/ws25data/lisi/GLOBLAND/DEVELOPEMENT/NH_processing_line/data"
+    if os.path.exists(logdir) != True:
+        logdir = "/mnt/ws25data/lisi/GLOBLAND/DEVELOPEMENT/NH_processing_line/data"
     logyearfile = "%s/GloblandNH_%s.log" % (logdir,year)
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)

@@ -162,8 +162,8 @@ if __name__=="__main__":
 	dstr2=datin.strftime("%Y%m%d")
 	
 	#logging
-	logdir = "/data/enveo/GL_SE/log"
-	#logdir = "/mnt/ws25data/lisi/GLOBLAND/DEVELOPEMENT/NH_processing_line/data"
+	#logdir = "/data/enveo/GL_SE/log"
+	logdir = "/mnt/ws25data/lisi/GLOBLAND/DEVELOPEMENT/NH_processing_line/data"
 	logyearfile = "%s/GloblandNH_%s.log" % (logdir,year)
 	logger = logging.getLogger(__name__)
 	logger.setLevel(logging.INFO)

@@ -15,7 +15,7 @@ import logging
 from PIL import Image
 import shlex,subprocess
 import signal
-import shutil
+
 #===================================================================================
 #
 # catch the kill signal
@@ -289,8 +289,8 @@ if __name__=="__main__":
 	datin2=(datetime.datetime.strptime(dat,"%Y%m%d")).strftime("%Y-%m-%d")
 	
 	#logging
-	logdir = "/data/enveo/GL_SE/log"
-	#logdir = "/mnt/ws25data/lisi/GLOBLAND/DEVELOPEMENT/NH_processing_line/data"
+	#logdir = "/data/enveo/GL_SE/log"
+	logdir = "/mnt/ws25data/lisi/GLOBLAND/DEVELOPEMENT/NH_processing_line/data"
 	year=datin.year
 	logyearfile = "%s/GloblandNH_%s.log" % (logdir,year)
 	logger = logging.getLogger(__name__)
@@ -364,7 +364,7 @@ if __name__=="__main__":
 			
 			
 			if os.path.exists(GLtiffnc)!=True:
-				__cmdline="python %s/gtiff2nc4_V1.0.1_NH.pyc -i %s -d %s --sd %s --ed %s -o %s --platform %s --sensor %s" % (binpath,mergedfiletif,dat,startstr,endstr,GLtiffnc,platform, sensor)
+				__cmdline="python %s/gtiff2nc4_V1.0.1_NH.pyc -i %s -d %s --sd %s --ed %s -o %s --platform %s --sensor %s" % (binpath[:-5],mergedfiletif,dat,startstr,endstr,GLtiffnc,platform, sensor)
 				print __cmdline
 				os.system( __cmdline)
 
@@ -374,7 +374,7 @@ if __name__=="__main__":
 				#print __cmdline
 				os.system(__cmdline)
 
-				__cmdline="python %s/add_palette.pyc %s %s " % (binpath, palette,GLtiffql)
+				__cmdline="python %s/add_palette.pyc %s %s " % (binpath[:-5], palette,GLtiffql)
 				#print __cmdline
 				os.system( __cmdline)
 				
@@ -399,7 +399,7 @@ if __name__=="__main__":
 			filetiffup = open(GLtiffql, 'rb')   
 			filencup = open(GLtiffnc, 'rb')  
 			remote = ftplib.FTP("litdb.fmi.fi", user="globsnow_admin", passwd="vX29si*wJ")   
-			remote.cwd("/GlobLand/SLSTR_NH/")
+			remote.cwd("/GlobLand/NH_1km_SCE/")
 			remote.storbinary('STOR ' + GLtiffql, filetiffup, 1024)
 			remote.storbinary('STOR ' + GLtiffnc, filencup, 1024)
 			remote.quit()
@@ -416,23 +416,22 @@ if __name__=="__main__":
 		sts = p.close()
 		sys.exit("ERROR uploading files to FMI GLOBSNOW FTP: %s!" % (dat))
 		
-        liedir = '%s/%s_LIE_toa_br' % (outpth, dat)
-        tardir = '%s/%s' % (outpth, dat)
-        if not os.path.exists(tardir):
-            os.mkdir(tardir)
-        if not os.path.exists(liedir):
-            os.mkdir(liedir)
-        tif_files = glob.glob('%s/SLSTR*tif' % outpth)
-        for tif_file in tif_files:
-            if not os.path.join(liedir,tif_file):
-                shutil.move(tif_file, liedir)
+        #liedir = '%s/%s_LIE_toa_br' % (outpth, dat)
+        #tardir = '%s/%s' % (outpth, dat)
+        #if not os.path.exists(tardir):
+            #os.mkdir(tardir)
+        #if not os.path.exists(liedir):
+            #os.mkdir(liedir)
+        #tif_files = glob.glob('%s/SLSTR*tif' % outpth)
+        #for tif_file in tif_files:
+            #shutil.move(tif_file, liedir)
 
-        if not os.path.exists('%s.tar.gz' % liedir):
-            os.system('tar -zcf %s.tar.gz %s' % (liedir, liedir))
-        if not os.path.exists('%s/%s_LIE_toa_br.tar.gz' % (tardir, dat)):
-            shutil.move('%s.tar.gz' % liedir, tardir)
-            cmd = 'upload2s3 %s' % tardir
-            cmdexec(cmd)
+        #if not os.path.exists('%s.tar.gz' % liedir):
+            #os.system('tar -zcf %s.tar.gz %s' % (liedir, liedir))
+        #if not os.path.exists('%s/%s_LIE_toa_br.tar.gz' % (tardir, dstr2)):
+            #shutil.move('%s.tar.gz' % liedir, tardir)
+            #cmd = 'upload2s3 %s' % tardir
+            #cmdexec(cmd)
 
 	# this section is only for uploading to GlobLand server!
 	#try:
