@@ -345,7 +345,7 @@ if __name__=="__main__":
 
 					
 			cmd="i.opt.sca.merge %s %s %s --ul=%s,%s --lr=%s,%s --sza-thr=%s --vza-thr=%s -p %s,-%s -o %s,a -n SCEcomposite" % (inputstr, szalist, vzalist, ulc[0],ulc[1], lrc[0],lrc[1], szathr, vzathr, res,res, mergedfile)
-			print(cmd)
+			#print(cmd)
 			cmdexec(cmd)
 			
 			print("Merging file < %s> successful!" % (mergedfile))
@@ -405,6 +405,7 @@ if __name__=="__main__":
 			remote.quit()
 			filencup.close()
 			filetiffup.close()
+			logger.info("%s : FILES UPLOADED TO THE FTP" % dat)
 	except:
 
 		SENDMAIL = "/usr/sbin/sendmail" # sendmail location
@@ -414,25 +415,26 @@ if __name__=="__main__":
 		p.write("\n") # blank line separating headers from body
 		p.write("Files for upload:\n%s\n%s " % (GLtiffnc,GLtiffql))
 		sts = p.close()
+		logger.info("%s : PROBLEM WITH UPLODING FILES" % dat)
 		sys.exit("ERROR uploading files to FMI GLOBSNOW FTP: %s!" % (dat))
 		
-        liedir = '%s/%s_LIE_toa_br' % (outpth, dat)
-        tardir = '%s/%s' % (outpth, dat)
-        if not os.path.exists(tardir):
-            os.mkdir(tardir)
-        if not os.path.exists(liedir):
-            os.mkdir(liedir)
-        tif_files = glob.glob('%s/SLSTR*tif' % outpth)
-        for tif_file in tif_files:
-            if not os.path.join(liedir,tif_file):
-                shutil.move(tif_file, liedir)
+    liedir = '%s/%s_LIE_toa_br' % (outpth, dat)
+    tardir = '%s/%s' % (outpth, dat)
+    if not os.path.exists(tardir):
+        os.mkdir(tardir)
+    if not os.path.exists(liedir):
+        os.mkdir(liedir)
+    tif_files = glob.glob('%s/SLSTR*tif' % outpth)
+    for tif_file in tif_files:
+        if not os.path.join(liedir,tif_file):
+            shutil.move(tif_file, liedir)
 
-        if not os.path.exists('%s.tar.gz' % liedir):
-            os.system('tar -zcf %s.tar.gz %s' % (liedir, liedir))
-        if not os.path.exists('%s/%s_LIE_toa_br.tar.gz' % (tardir, dat)):
-            shutil.move('%s.tar.gz' % liedir, tardir)
-            cmd = 'upload2s3 %s' % tardir
-            cmdexec(cmd)
+    if not os.path.exists('%s.tar.gz' % liedir):
+        os.system('tar -zcf %s.tar.gz %s' % (liedir, liedir))
+    if not os.path.exists('%s/%s_LIE_toa_br.tar.gz' % (tardir, dat)):
+        shutil.move('%s.tar.gz' % liedir, tardir)
+        cmd = 'upload2s3 %s' % tardir
+        cmdexec(cmd)
 
 	# this section is only for uploading to GlobLand server!
 	#try:

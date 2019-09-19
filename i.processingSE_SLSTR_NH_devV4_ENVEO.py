@@ -186,7 +186,8 @@ if __name__=="__main__":
     os.chdir(outdir)
     toa_list=[]
     anfiles=glob.glob("*data_an.mdi")
-
+    print anfiles
+    print len(anfiles)
 
     # processing of available toafiles
     for an_output_name in sorted(anfiles):

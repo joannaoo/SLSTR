@@ -242,78 +242,90 @@ if __name__ == '__main__':
             obt_list.append(obt)
 
     os.chdir(odir)
-    for orbit in sorted(obt_list):
-        print '\nProcessing for orbit: %s' % orbit
-        files = glob.glob('%s/S*RBT____%s*_%s_*.zip' % (rdir, dstr2, orbit))
-        for infile in sorted(files):
-            sen3 = '%s.SEN3' % os.path.basename(infile[:-8])
-            if os.path.exists(sen3) != True:
-                __cmdline = 'unzip -q %s *an.nc *in.nc *tx.nc *tn.nc *.xml -x *time*.nc *met_tx.nc -d .' % infile
-                cmdexec(__cmdline)
-            ratestat = False
-            ratestat, Ncoo, Scoo, Wcoo, Ecoo = filelocationcheck(sen3, GLpoly)
-            print '*******************************************************************************'
-            print 'File: %s' % infile
-            print 'File intersecting with GL extent: %s' % str(ratestat)
-            if ratestat == True:
-                base_name_out = create_basename(Ncoo, Scoo, Wcoo, Ecoo, sen3, orbit)
-                an_output_name = sen3[:-5] + '_B00500m_data_an.mdi'
-                in_output_name = sen3[:-5] + '_B01000m_data_in.mdi'
-                tn_output_name = sen3[:-5] + '_B16000m_aux_tn.mdi'
-                F_ft_lock = sen3[:-5] + '.flock'
-                logfilename = sen3[:-5] + '.info'
-                with open(F_ft_lock, 'a+') as (lockfile):
-                    try:
-                        fcntl.fcntl(lockfile.fileno(), fcntl.F_SETLK, lockdata)
-                    except IOError:
-                        filelogging(logfilename, 'MESSAGE', 'File lock on < %s >' % sen3)
-                        continue
-
-                    if os.path.exists(an_output_name):
-                        val = layercheck(an_output_name, 'an')
-                    if os.path.exists(in_output_name):
-                        val = layercheck(in_output_name, 'in')
-                    if os.path.exists(tn_output_name):
-                        val = layercheck(tn_output_name, 'tn')
-                    if os.path.exists(an_output_name) == False or os.path.exists(in_output_name) == False or os.path.exists(tn_output_name) == False:
-                        filelogging(logfilename, 'MESSAGE', 'Start processing < %s >' % sen3)
-                        filelogging(logfilename, 'MESSAGE', 'Start pre-processing < %s >' % sen3)
+    try:
+        for orbit in sorted(obt_list):
+            print '\nProcessing for orbit: %s' % orbit
+            files = glob.glob('%s/S*RBT____%s*_%s_*.zip' % (rdir, dstr2, orbit))
+            for infile in sorted(files):
+                sen3 = '%s.SEN3' % os.path.basename(infile[:-8])
+                print sen3
+                if os.path.exists(sen3) != True:
+                    __cmdline = 'unzip -q %s *an.nc *in.nc *tx.nc *tn.nc *.xml -x *time*.nc *met_tx.nc -d .' % infile
+                    cmdexec(__cmdline)
+                ratestat = False
+                ratestat, Ncoo, Scoo, Wcoo, Ecoo = filelocationcheck(sen3, GLpoly)
+                print '*******************************************************************************'
+                print 'File: %s' % infile
+                print 'File intersecting with GL extent: %s' % str(ratestat)
+                if ratestat == True:
+                    base_name_out = create_basename(Ncoo, Scoo, Wcoo, Ecoo, sen3, orbit)
+                    an_output_name = sen3[:-5] + '_B00500m_data_an.mdi'
+                    in_output_name = sen3[:-5] + '_B01000m_data_in.mdi'
+                    tn_output_name = sen3[:-5] + '_B16000m_aux_tn.mdi'
+                    F_ft_lock = sen3[:-5] + '.flock'
+                    logfilename = sen3[:-5] + '.info'
+                    with open(F_ft_lock, 'a+') as (lockfile):
                         try:
-                            print 'Importing data ...'
-                            print '%s.SEN3' % infile[:-8]
-                            __cmdline = 'i.in.opt.sentinel3 -i %s/%s -d . -v n -s a -s i --rad2ref --force' % (odir, sen3)
-                            cmdexec(__cmdline)
-                            filelogging(logfilename, 'SUCCESS', 'Importing Reflectance/Brightness temperature of < %s >' % sen3)
-                        except:
-                            filelogging(logfilename, 'ERROR', 'Problems importing Reflectance/Brightness temperature of < %s >' % sen3)
+                            fcntl.fcntl(lockfile.fileno(), fcntl.F_SETLK, lockdata)
+                        except IOError:
+                            filelogging(logfilename, 'MESSAGE', 'File lock on < %s >' % sen3)
+                            continue
 
-                        tifstat, Ncoo, Scoo, Wcoo, Ecoo = filelocationcheck(sen3, lie_extent)
-                        print 'File crossing with LIE extent : %s' % tifstat
-                        if tifstat == True:
-                            for band in bands:
-                                if band in ('s1', 's2', 's3', 's4', 's5', 's6'):
-                                    toa_tif = '%s_500m_%s.tif' % (base_name_out, band)
-                                    __cmdline = 'dexport -i %s,_toa_reflectance_%s -o %s_temp.tif --format GTiff --force' % (an_output_name, band, toa_tif[:-4])
-                                    cmdexec(__cmdline)
-                                    __cmdline = 'gdal_translate -co "COMPRESS=LZW" %s_temp.tif %s' % (toa_tif[:-4], toa_tif)
-                                    cmdexec(__cmdline)
-                                    os.remove('%s_temp.tif' % toa_tif[:-4])
-                                else:
-                                    bt_tif = '%s_1000m_%s.tif' % (base_name_out, band)
-                                    __cmdline = 'dexport -i %s,_toa_brightness_temperature_%s -o %s_temp.tif --format GTiff --force' % (in_output_name, band, bt_tif[:-4])
-                                    cmdexec(__cmdline)
-                                    __cmdline = 'gdal_translate -co "COMPRESS=LZW" %s_temp.tif %s' % (bt_tif[:-4], bt_tif)
-                                    cmdexec(__cmdline)
-                                    os.remove('%s_temp.tif' % bt_tif[:-4])
+                        if os.path.exists(an_output_name):
+                            val = layercheck(an_output_name, 'an')
+                        if os.path.exists(in_output_name):
+                            val = layercheck(in_output_name, 'in')
+                        if os.path.exists(tn_output_name):
+                            val = layercheck(tn_output_name, 'tn')
+                        if os.path.exists(an_output_name) == False or os.path.exists(in_output_name) == False or os.path.exists(tn_output_name) == False:
+                            filelogging(logfilename, 'MESSAGE', 'Start processing < %s >' % sen3)
+                            filelogging(logfilename, 'MESSAGE', 'Start pre-processing < %s >' % sen3)
+                            try:
+                                print 'Importing data ...'
+                                print '%s.SEN3' % infile[:-8]
+                                __cmdline = 'i.in.opt.sentinel3 -i %s/%s -d . -v n -s a -s i --rad2ref --force' % (odir, sen3)
+                                cmdexec(__cmdline)
+                                filelogging(logfilename, 'SUCCESS', 'Importing Reflectance/Brightness temperature of < %s >' % sen3)
+                            except:
+                                filelogging(logfilename, 'ERROR', 'Problems importing Reflectance/Brightness temperature of < %s >' % sen3)
 
-                            print 'Remove SEN3 folder '
-                            shutil.rmtree(sen3)
-                    else:
-                        print 'Files already processed: \n \x0c %s\n \x0c %s ' % (an_output_name, in_output_name)
-            else:
-                print 'Remove the data that is not crossing the NH extent'
-                shutil.rmtree(sen3)
+                            tifstat, Ncoo, Scoo, Wcoo, Ecoo = filelocationcheck(sen3, lie_extent)
+                            print 'File crossing with LIE extent : %s' % tifstat
+                            if tifstat == True:
+                                for band in bands:
+                                    if band in ('s1', 's2', 's3', 's4', 's5', 's6'):
+                                        toa_tif = '%s_500m_%s.tif' % (base_name_out, band)
+                                        __cmdline = 'dexport -i %s,_toa_reflectance_%s -o %s_temp.tif --format GTiff --force' % (an_output_name, band, toa_tif[:-4])
+                                        cmdexec(__cmdline)
+                                        __cmdline = 'gdal_translate -co "COMPRESS=LZW" %s_temp.tif %s' % (toa_tif[:-4], toa_tif)
+                                        cmdexec(__cmdline)
+                                        os.remove('%s_temp.tif' % toa_tif[:-4])
+                                    else:
+                                        bt_tif = '%s_1000m_%s.tif' % (base_name_out, band)
+                                        __cmdline = 'dexport -i %s,_toa_brightness_temperature_%s -o %s_temp.tif --format GTiff --force' % (in_output_name, band, bt_tif[:-4])
+                                        cmdexec(__cmdline)
+                                        __cmdline = 'gdal_translate -co "COMPRESS=LZW" %s_temp.tif %s' % (bt_tif[:-4], bt_tif)
+                                        cmdexec(__cmdline)
+                                        os.remove('%s_temp.tif' % bt_tif[:-4])
 
+                                print 'Remove SEN3 folder '
+                                shutil.rmtree(sen3)
+                                
+                        else:
+                            print 'Files already processed: \n \x0c %s\n \x0c %s ' % (an_output_name, in_output_name)
+                else:
+                    print 'Remove the data that is not crossing the NH extent'
+                    shutil.rmtree(sen3)
+    except:
+        SENDMAIL = '/usr/sbin/sendmail'
+        p = os.popen('%s -t' % SENDMAIL, 'w')
+        p.write('To: globland@enveo.at\n')
+        p.write('Subject: Preprocessing for %s failed \n' % datin)
+        p.write('\n')
+        sts = p.close()
+        logger.info('%s : PROCESSING FOR  %s FAILED' % (nowSTR, datin))
+        sys.exit('Raw data directory < %s > does not exist!' % orirdir)
+        
     #liedir = '%s/%s_LIE_toa_br' % (odir, dstr2)
     #tardir = '%s/%s' % (odir, dstr2)
     #if not os.path.exists(tardir):
